@@ -142,7 +142,7 @@
 <div id="watermark">Sir Binary</div>
 
 <!-- Audio -->
-<audio id="bg-music" src="AFG.m4a" preload="auto" loop playsinline></audio>
+<audio id="bg-music" src="AFG.mp3" preload="auto" loop playsinline></audio>
 
 <script>
   const startHeart = document.getElementById('start-heart');
@@ -239,9 +239,19 @@
     setTimeout(() => heart.remove(), 10000);
   }
 
-  function startExperience() {
+  async function startExperience() {
     startHeart.style.pointerEvents = 'none';
     heartInner.style.animation = 'none';
+
+    // Attempt to play music immediately on user tap with mute trick for iOS
+    try {
+      bgMusic.muted = true;
+      await bgMusic.play();
+      bgMusic.muted = false;
+      bgMusic.volume = 0.6;
+    } catch(e) {
+      console.log('Audio play failed:', e);
+    }
 
     const anim = heartInner.animate([
       { transform: 'scale(1)', opacity: 1 },
@@ -251,15 +261,8 @@
     anim.onfinish = () => {
       startHeart.style.display = 'none';  // hide completely to free space
 
-      // Show poem and watermark simultaneously
       poemContainer.style.opacity = '1';
       watermark.style.opacity = '0.08';
-
-      // Start music and poem animation at the same time
-      bgMusic.volume = 0.6;
-      bgMusic.play().catch((err) => {
-        console.log('Audio play error:', err);
-      });
 
       heartsInterval = setInterval(createHeart, 500);
 

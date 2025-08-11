@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Coded By Sir Binary</title>
+
+<!-- Google Fonts: Dancing Script -->
+<link href="https://fonts.googleapis.com/css2?family=Dancing+Script&display=swap" rel="stylesheet" />
+
+<style>
+  body {
+    margin: 0; padding: 0;
+    height: 100vh;
+    background: linear-gradient(135deg, #ffdde1, #ee9ca7);
+    font-family: 'Segoe UI Emoji', 'Apple Color Emoji', 'Segoe UI', cursive;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* Start heart container exactly centered */
+  #start-heart {
+    width: 150px;
+    height: 150px;
+    cursor: pointer;
+    filter: drop-shadow(0 0 8px rgba(255, 0, 0, 0.7));
+    animation: beat 1s infinite;
+    z-index: 10;
+
+    /* absolute center */
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  /* Heart SVG fills and beats */
+  #start-heart svg {
+    width: 100%;
+    height: 100%;
+    fill: red;
+  }
+
+  @keyframes beat {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.15); }
+  }
+
+  /* Poem and watermark centered absolutely and hidden initially */
+  #poem, #watermark {
+    opacity: 0;
+    transition: opacity 1s ease;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+  }
+
+  /* Poem styles with Dancing Script font */
+  #poem {
+    font-family: 'Dancing Script', cursive;
+    font-size: 3em;
+    color: white;
+    text-shadow: 0 0 15px rgba(255, 255, 255, 0.9);
+    max-width: 80%;
+    z-index: 2;
+  }
+
+  #poem span {
+    opacity: 0;
+    transition: opacity 0.5s ease;
+  }
+
+  /* Watermark styles */
+  #watermark {
+    font-size: 8em;
+    opacity: 0.08;
+    color: white;
+    font-family: 'Dancing Script', cursive;
+    white-space: nowrap;
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  /* Floating hearts */
+  .heart {
+    position: fixed;
+    width: 20px;
+    height: 20px;
+    background: red;
+    transform: rotate(45deg);
+    animation: floatUp 10s infinite ease-in;
+    opacity: 0.4;
+  }
+  .heart::before,
+  .heart::after {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    background: red;
+    border-radius: 50%;
+  }
+  .heart::before {
+    top: -10px;
+    left: 0;
+  }
+  .heart::after {
+    left: -10px;
+    top: 0;
+  }
+  @keyframes floatUp {
+    0% {
+      transform: translateY(0) rotate(45deg);
+      opacity: 0.4;
+    }
+    100% {
+      transform: translateY(-120vh) rotate(45deg);
+      opacity: 0;
+    }
+  }
+</style>
+</head>
+<body>
+
+<!-- Start heart -->
+<div id="start-heart" title="Tap to start ❤️">
+  <svg viewBox="0 0 32 29.6" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+    <path d="M23.6,0c-3.4,0-6.4,2.1-7.6,5.1C14.8,2.1,11.8,0,8.4,0C3.8,0,0,3.8,0,8.4c0,5.3,5.4,9.6,13.6,17.1l2.4,2.1l2.4-2.1
+      C26.6,18,32,13.7,32,8.4C32,3.8,28.2,0,23.6,0z"/>
+  </svg>
+</div>
+
+<!-- Poem container -->
+<div id="poem"></div>
+<div id="watermark">Sir Binary</div>
+
+<!-- Audio -->
+<audio id="bg-music" src="AFG.m4a" preload="auto" loop></audio>
+
+<script>
+  const startHeart = document.getElementById('start-heart');
+  const poemContainer = document.getElementById('poem');
+  const watermark = document.getElementById('watermark');
+  const bgMusic = document.getElementById('bg-music');
+
+  const poemLines = [
+    { text: 'In Afghanistan we don\'t say "I love you"', time: 2980 },
+    { text: 'We say', time: 2250 },
+    { text: 'Az barg-e gul qaghaz saazam', time: 5010 },
+    { text: 'Nama-e shereen be pardaazam', time: 4560 },
+    { text: 'Benaweesam as eshqam, razam', time: 5320 },
+    { text: 'Ay naw gul-e mannn', time: 3800 },
+    { text: 'Sultan-e qalbam tu asti, tu asti', time: 5650 },
+    { text: 'Darwaaza hay-ii dilam ra shekasti', time: 5220 },
+    { text: 'Paiman yaar-e tu bar man bebasti', time: 5180 },
+    { text: 'Cheshme intezaarammmm', time: 6140 },
+  ];
+
+  let index = 0;
+  let heartsInterval;
+
+  function splitLineWithHtml(htmlString) {
+    const container = document.createElement('div');
+    container.innerHTML = htmlString;
+
+    const fragments = [];
+
+    container.childNodes.forEach((node) => {
+      if (node.nodeType === Node.TEXT_NODE) {
+        const words = node.textContent.split(/(\s+)/);
+        words.forEach(word => {
+          if(word.length > 0){
+            const span = document.createElement('span');
+            span.textContent = word;
+            span.style.opacity = 0;
+            fragments.push(span);
+          }
+        });
+      } else if (node.nodeType === Node.ELEMENT_NODE) {
+        fragments.push(node.cloneNode(true));
+      }
+    });
+
+    return fragments;
+  }
+
+  function showNextLine() {
+    if (index >= poemLines.length) {
+      index = 0;
+    }
+
+    const line = poemLines[index];
+    poemContainer.innerHTML = '';
+
+    const fragments = splitLineWithHtml(line.text);
+    fragments.forEach(frag => poemContainer.appendChild(frag));
+
+    const spans = poemContainer.querySelectorAll('span');
+    let wordIndex = 0;
+
+    function fadeNextWord() {
+      if (wordIndex < spans.length) {
+        spans[wordIndex].style.opacity = 1;
+        wordIndex++;
+        setTimeout(fadeNextWord, 200);
+      } else {
+        const fadeTime = spans.length * 200;
+        const remainingTime = line.time - fadeTime;
+        setTimeout(() => {
+          index++;
+          showNextLine();
+        }, remainingTime > 0 ? remainingTime : 0);
+      }
+    }
+
+    fadeNextWord();
+  }
+
+  function createHeart() {
+    const heart = document.createElement('div');
+    heart.className = 'heart';
+
+    // random left and top across viewport width and height
+    heart.style.left = Math.random() * window.innerWidth + 'px';
+    heart.style.top = Math.random() * window.innerHeight + 'px';
+
+    // random animation duration
+    heart.style.animationDuration = (5 + Math.random() * 5) + 's';
+
+    document.body.appendChild(heart);
+    setTimeout(() => heart.remove(), 10000);
+  }
+
+  function startExperience() {
+    startHeart.style.pointerEvents = 'none';
+    startHeart.style.animation = 'none';
+    const anim = startHeart.animate([
+      { transform: 'scale(1)', opacity: 1 },
+      { transform: 'scale(1.5)', opacity: 0 }
+    ], { duration: 700, fill: 'forwards' });
+
+    anim.onfinish = () => {
+      startHeart.style.display = 'none';  // hide completely to free space
+
+      poemContainer.style.opacity = '1';
+      watermark.style.opacity = '0.08';
+
+      heartsInterval = setInterval(createHeart, 500);
+
+      showNextLine();
+
+      bgMusic.volume = 0.6;
+      bgMusic.play();
+    };
+  }
+
+  startHeart.addEventListener('click', startExperience);
+</script>
+
+</body>
+</html>

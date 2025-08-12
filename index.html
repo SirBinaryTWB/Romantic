@@ -4,9 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Coded By Sir Binary</title>
-
 <link href="https://fonts.googleapis.com/css2?family=Dancing+Script&display=swap" rel="stylesheet" />
-
 <style>
   body {
     margin: 0; padding: 0;
@@ -16,8 +14,6 @@
     overflow: hidden;
     position: relative;
   }
-
-  /* Start heart container exactly centered */
   #start-heart {
     position: fixed;
     top: 50%;
@@ -29,26 +25,20 @@
     filter: drop-shadow(0 0 8px rgba(255, 0, 0, 0.7));
     z-index: 10;
   }
-
-  /* Inner heart scales and animates */
   #heart-inner {
     width: 100%;
     height: 100%;
     animation: beat 1s infinite;
   }
-
   #heart-inner svg {
     width: 100%;
     height: 100%;
     fill: red;
   }
-
   @keyframes beat {
     0%, 100% { transform: scale(1); }
     50% { transform: scale(1.15); }
   }
-
-  /* Poem and watermark centered absolutely and hidden initially */
   #poem, #watermark {
     opacity: 0;
     transition: opacity 1s ease;
@@ -58,8 +48,6 @@
     transform: translate(-50%, -50%);
     text-align: center;
   }
-
-  /* Poem styles with Dancing Script font */
   #poem {
     font-family: 'Dancing Script', cursive;
     font-size: 3em;
@@ -68,13 +56,10 @@
     max-width: 80%;
     z-index: 2;
   }
-
   #poem span {
     opacity: 0;
     transition: opacity 0.5s ease;
   }
-
-  /* Watermark styles */
   #watermark {
     font-size: 8em;
     opacity: 0.08;
@@ -84,8 +69,6 @@
     z-index: 1;
     pointer-events: none;
   }
-
-  /* Floating hearts */
   .heart {
     position: fixed;
     width: 20px;
@@ -125,8 +108,6 @@
 </style>
 </head>
 <body>
-
-<!-- Start heart -->
 <div id="start-heart" title="Tap to start ❤️">
   <div id="heart-inner">
     <svg viewBox="0 0 32 29.6" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
@@ -135,18 +116,12 @@
     </svg>
   </div>
 </div>
-
-<!-- Poem container -->
 <div id="poem"></div>
 <div id="watermark">Sir Binary</div>
-
-<!-- Audio -->
-<audio id="bg-music" src="AFG.mp3" preload="auto" playsinline muted></audio>
-
+<audio id="bg-music" src="AFG.mp3" preload="auto" playsinline></audio>
 <script>
   let index = 0;
   let heartsInterval;
-
   const poemLines = [
     { text: 'In Afghanistan we don\'t say "I love you"', time: 2980 },
     { text: 'We say', time: 2250 },
@@ -159,11 +134,11 @@
     { text: 'Paiman yaar-e tu bar man bebasti', time: 5180 },
     { text: 'Cheshme intezaarammmm', time: 6140 },
   ];
-
   const poemContainer = document.getElementById('poem');
   const watermark = document.getElementById('watermark');
   const bgMusic = document.getElementById('bg-music');
-
+  const startHeart = document.getElementById('start-heart');
+  const heartInner = document.getElementById('heart-inner');
   function splitLineWithHtml(htmlString) {
     const container = document.createElement('div');
     container.innerHTML = htmlString;
@@ -185,7 +160,6 @@
     });
     return fragments;
   }
-
   function showNextLine() {
     if (index >= poemLines.length) {
       endExperience();
@@ -213,7 +187,6 @@
     }
     fadeNextWord();
   }
-
   function createHeart() {
     const heart = document.createElement('div');
     heart.className = 'heart';
@@ -223,55 +196,34 @@
     document.body.appendChild(heart);
     setTimeout(() => heart.remove(), 10000);
   }
-
-  async function startExperience() {
-    const currentStartHeart = document.getElementById('start-heart');
-    const currentHeartInner = currentStartHeart.querySelector('#heart-inner');
-    currentStartHeart.style.pointerEvents = 'none';
-
-    // Stop the heartbeat animation before fade out
-    currentHeartInner.style.animation = 'none';
-
-    // Animate fade out and scale up
-    const anim = currentHeartInner.animate([
+  function startExperience() {
+    startHeart.style.pointerEvents = 'none';
+    heartInner.style.animation = 'none';
+    bgMusic.currentTime = 0;
+    const playPromise = bgMusic.play();
+    playPromise.catch(e => {
+      console.error('Audio play failed:', e);
+    });
+    const anim = heartInner.animate([
       { transform: 'scale(1)', opacity: 1 },
       { transform: 'scale(1.5)', opacity: 0 }
     ], { duration: 700, fill: 'forwards' });
-
-    // Ensure audio is loaded and play immediately muted then unmute for iOS
-    bgMusic.load();
-
-    anim.onfinish = async () => {
-      currentStartHeart.style.display = 'none';
+    anim.onfinish = () => {
+      startHeart.style.display = 'none';
       poemContainer.style.opacity = '1';
       watermark.style.opacity = '0.08';
-
-      try {
-        await bgMusic.play();
-        bgMusic.muted = false;
-        bgMusic.volume = 0.6;
-      } catch (e) {
-        console.log('Audio play failed:', e);
-      }
-
       heartsInterval = setInterval(createHeart, 500);
       showNextLine();
     };
   }
-
   function endExperience() {
     bgMusic.pause();
     bgMusic.currentTime = 0;
     clearInterval(heartsInterval);
-
     poemContainer.style.opacity = '0';
     watermark.style.opacity = '0';
-
-    // Remove old start heart completely
     const oldStartHeart = document.getElementById('start-heart');
     if (oldStartHeart) oldStartHeart.remove();
-
-    // Create new start-heart element
     const newStartHeart = document.createElement('div');
     newStartHeart.id = 'start-heart';
     newStartHeart.title = 'Tap to start ❤️';
@@ -284,32 +236,23 @@
     newStartHeart.style.cursor = 'pointer';
     newStartHeart.style.filter = 'drop-shadow(0 0 8px rgba(255, 0, 0, 0.7))';
     newStartHeart.style.zIndex = '10';
-
     const heartInnerDiv = document.createElement('div');
     heartInnerDiv.id = 'heart-inner';
     heartInnerDiv.style.width = '100%';
     heartInnerDiv.style.height = '100%';
     heartInnerDiv.style.animation = 'beat 1s infinite';
-
-    heartInnerDiv.innerHTML = `
-      <svg viewBox="0 0 32 29.6" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false" style="width: 100%; height: 100%; fill: red;">
-        <path d="M23.6,0c-3.4,0-6.4,2.1-7.6,5.1C14.8,2.1,11.8,0,8.4,0C3.8,0,0,3.8,0,8.4c0,5.3,5.4,9.6,13.6,17.1l2.4,2.1l2.4-2.1
-          C26.6,18,32,13.7,32,8.4C32,3.8,28.2,0,23.6,0z"/>
-      </svg>`;
-
+    heartInnerDiv.innerHTML = `<svg viewBox="0 0 32 29.6" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false" style="width: 100%; height: 100%; fill: red;">
+      <path d="M23.6,0c-3.4,0-6.4,2.1-7.6,5.1C14.8,2.1,11.8,0,8.4,0C3.8,0,0,3.8,0,8.4c0,5.3,5.4,9.6,13.6,17.1l2.4,2.1l2.4-2.1
+        C26.6,18,32,13.7,32,8.4C32,3.8,28.2,0,23.6,0z"/>
+    </svg>`;
     newStartHeart.appendChild(heartInnerDiv);
     document.body.appendChild(newStartHeart);
-
-    // Attach click event to new heart
     newStartHeart.addEventListener('click', () => {
-      index = 0; // reset poem index
+      index = 0;
       startExperience();
     });
   }
-
-  // Initial listener for first heart
-  document.getElementById('start-heart').addEventListener('click', startExperience);
+  startHeart.addEventListener('click', startExperience);
 </script>
-
 </body>
 </html>

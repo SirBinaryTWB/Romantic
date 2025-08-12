@@ -229,6 +229,15 @@
     const currentHeartInner = currentStartHeart.querySelector('#heart-inner');
     currentStartHeart.style.pointerEvents = 'none';
 
+    // Start music immediately
+    try {
+      bgMusic.currentTime = 0;
+      await bgMusic.play();
+      bgMusic.volume = 0.6;
+    } catch (e) {
+      console.log('Audio play failed:', e);
+    }
+
     // Stop the heartbeat animation before fade out
     currentHeartInner.style.animation = 'none';
 
@@ -238,18 +247,10 @@
       { transform: 'scale(1.5)', opacity: 0 }
     ], { duration: 700, fill: 'forwards' });
 
-    anim.onfinish = async () => {
+    anim.onfinish = () => {
       currentStartHeart.style.display = 'none';
       poemContainer.style.opacity = '1';
       watermark.style.opacity = '0.08';
-
-      try {
-        bgMusic.currentTime = 0;
-        await bgMusic.play();
-        bgMusic.volume = 0.6;
-      } catch (e) {
-        console.log('Audio play failed:', e);
-      }
 
       heartsInterval = setInterval(createHeart, 500);
       showNextLine();

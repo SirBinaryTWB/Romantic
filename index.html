@@ -141,7 +141,7 @@
 <div id="watermark">Sir Binary</div>
 
 <!-- Audio -->
-<audio id="bg-music" src="AFG.mp3" preload="auto" playsinline></audio>
+<audio id="bg-music" src="AFG.mp3" preload="auto" playsinline muted></audio>
 
 <script>
   let index = 0;
@@ -229,15 +229,6 @@
     const currentHeartInner = currentStartHeart.querySelector('#heart-inner');
     currentStartHeart.style.pointerEvents = 'none';
 
-    // Start music immediately
-    try {
-      bgMusic.currentTime = 0;
-      await bgMusic.play();
-      bgMusic.volume = 0.6;
-    } catch (e) {
-      console.log('Audio play failed:', e);
-    }
-
     // Stop the heartbeat animation before fade out
     currentHeartInner.style.animation = 'none';
 
@@ -247,10 +238,21 @@
       { transform: 'scale(1.5)', opacity: 0 }
     ], { duration: 700, fill: 'forwards' });
 
-    anim.onfinish = () => {
+    // Ensure audio is loaded and play immediately muted then unmute for iOS
+    bgMusic.load();
+
+    anim.onfinish = async () => {
       currentStartHeart.style.display = 'none';
       poemContainer.style.opacity = '1';
       watermark.style.opacity = '0.08';
+
+      try {
+        await bgMusic.play();
+        bgMusic.muted = false;
+        bgMusic.volume = 0.6;
+      } catch (e) {
+        console.log('Audio play failed:', e);
+      }
 
       heartsInterval = setInterval(createHeart, 500);
       showNextLine();

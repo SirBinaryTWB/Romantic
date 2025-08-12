@@ -137,6 +137,7 @@
 <script>
   let index = 0;
   let heartsInterval;
+
   const poemLines = [
     { text: 'In Afghanistan we don\'t say "I love you"', time: 2980 },
     { text: 'We say', time: 2250 },
@@ -220,24 +221,33 @@
     startHeart.style.pointerEvents = 'none';
     heartInner.style.animation = 'none';
 
+    // Animate fade out and scale up
     const anim = heartInner.animate([
       { transform: 'scale(1)', opacity: 1 },
       { transform: 'scale(1.5)', opacity: 0 }
     ], { duration: 700, fill: 'forwards' });
 
+    // Play audio immediately on tap without delay
+    bgMusic.currentTime = 0;
+    const playPromise = bgMusic.play();
+
     anim.onfinish = () => {
-      bgMusic.currentTime = 0;
-      bgMusic.play().catch(e => {
-        console.error('Audio play failed:', e);
-      });
+      if (playPromise !== undefined) {
+        playPromise.then(() => {
+          startHeart.style.display = 'none';
+          poemContainer.style.opacity = '1';
+          watermark.style.opacity = '0.08';
 
-      startHeart.style.display = 'none';
-      poemContainer.style.opacity = '1';
-      watermark.style.opacity = '0.08';
-
-      heartsInterval = setInterval(createHeart, 500);
-      showNextLine();
-    };
+          heartsInterval = setInterval(createHeart, 500);
+          showNextLine();
+        }).catch((error) => {
+          console.error('Audio play failed:', error);
+          alert('Audio playback failed. Please tap again.');
+          startHeart.style.pointerEvents = 'auto';
+          heartInner.style.animation = 'beat 1s infinite';
+        });
+      }
+    }
   }
 
   function endExperience() {
@@ -270,11 +280,11 @@
     heartInnerDiv.style.height = '100%';
     heartInnerDiv.style.animation = 'beat 1s infinite';
 
-    heartInnerDiv.innerHTML = `
+    heartInnerDiv.innerHTML = 
       <svg viewBox="0 0 32 29.6" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false" style="width: 100%; height: 100%; fill: red;">
         <path d="M23.6,0c-3.4,0-6.4,2.1-7.6,5.1C14.8,2.1,11.8,0,8.4,0C3.8,0,0,3.8,0,8.4c0,5.3,5.4,9.6,13.6,17.1l2.4,2.1l2.4-2.1
           C26.6,18,32,13.7,32,8.4C32,3.8,28.2,0,23.6,0z"/>
-      </svg>`;
+      </svg>;
 
     newStartHeart.appendChild(heartInnerDiv);
     document.body.appendChild(newStartHeart);

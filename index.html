@@ -137,7 +137,6 @@
 <script>
   let index = 0;
   let heartsInterval;
-
   const poemLines = [
     { text: 'In Afghanistan we don\'t say "I love you"', time: 2980 },
     { text: 'We say', time: 2250 },
@@ -221,33 +220,24 @@
     startHeart.style.pointerEvents = 'none';
     heartInner.style.animation = 'none';
 
-    // Animate fade out and scale up
     const anim = heartInner.animate([
       { transform: 'scale(1)', opacity: 1 },
       { transform: 'scale(1.5)', opacity: 0 }
     ], { duration: 700, fill: 'forwards' });
 
-    // Play audio immediately on tap without delay
-    bgMusic.currentTime = 0;
-    const playPromise = bgMusic.play();
-
     anim.onfinish = () => {
-      if (playPromise !== undefined) {
-        playPromise.then(() => {
-          startHeart.style.display = 'none';
-          poemContainer.style.opacity = '1';
-          watermark.style.opacity = '0.08';
+      bgMusic.currentTime = 0;
+      bgMusic.play().catch(e => {
+        console.error('Audio play failed:', e);
+      });
 
-          heartsInterval = setInterval(createHeart, 500);
-          showNextLine();
-        }).catch((error) => {
-          console.error('Audio play failed:', error);
-          alert('Audio playback failed. Please tap again.');
-          startHeart.style.pointerEvents = 'auto';
-          heartInner.style.animation = 'beat 1s infinite';
-        });
-      }
-    }
+      startHeart.style.display = 'none';
+      poemContainer.style.opacity = '1';
+      watermark.style.opacity = '0.08';
+
+      heartsInterval = setInterval(createHeart, 500);
+      showNextLine();
+    };
   }
 
   function endExperience() {
